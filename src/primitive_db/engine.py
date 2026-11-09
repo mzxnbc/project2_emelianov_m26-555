@@ -2,7 +2,6 @@
 """Командный интерфейс базы данных."""
 
 import json
-import shlex
 
 from prettytable import PrettyTable
 from prompt import string
@@ -22,6 +21,7 @@ from primitive_db.decorators import (
     handle_db_errors,
     log_time,
 )
+from primitive_db.parser import parse_command
 from primitive_db.utils import (
     load_metadata,
     load_table_data,
@@ -97,7 +97,7 @@ def run():
             if not command:
                 continue
 
-            parts = shlex.split(command)
+            parts = parse_command(command)
             action = parts[0]
 
             metadata = load_metadata(DB_META_FILE)
@@ -160,13 +160,6 @@ def run():
 
                 table_name = parts[2]
                 values = parts[4:]
-
-                if values[0].startswith("("):
-                    values[0] = values[0][1:]
-                if values[-1].endswith(")"):
-                    values[-1] = values[-1][:-1]
-
-                values = [value.rstrip(",") for value in values]
 
                 records = load_table_data(table_name)
                 record = timed_insert(
