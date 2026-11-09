@@ -1,6 +1,8 @@
 """Основная логика управления таблицами."""
 
-from primitive_db.constants import ID_COLUMN, SUPPORTED_TYPES
+from pathlib import Path
+
+from primitive_db.constants import DATA_DIR, ID_COLUMN, SUPPORTED_TYPES
 
 
 def create_table(metadata, table_name, columns):
@@ -15,7 +17,9 @@ def create_table(metadata, table_name, columns):
 
     for column_name, column_type in columns:
         if column_name == ID_COLUMN:
-            raise ValueError(f"Колонка '{ID_COLUMN}' создаётся автоматически.")
+            raise ValueError(
+                f"Колонка '{ID_COLUMN}' создаётся автоматически."
+            )
 
         if column_name in table_columns:
             raise ValueError(f"Колонка '{column_name}' уже существует.")
@@ -33,12 +37,18 @@ def create_table(metadata, table_name, columns):
 
 
 def drop_table(metadata, table_name):
-    """Удалить существующую таблицу."""
+    """Удалить таблицу и её файл с данными."""
     if table_name not in metadata:
         raise KeyError(f"Таблица '{table_name}' не существует.")
 
+    file_path = Path(DATA_DIR) / f"{table_name}.json"
+
+    if file_path.exists():
+        file_path.unlink()
+
     del metadata[table_name]
     return metadata
+
 
 def insert_record(metadata, table_name, values, records):
     """Добавить новую запись в таблицу."""
@@ -49,7 +59,9 @@ def insert_record(metadata, table_name, values, records):
     user_columns = [name for name in columns if name != ID_COLUMN]
 
     if len(values) != len(user_columns):
-        raise ValueError("Количество значений не совпадает с количеством колонок.")
+        raise ValueError(
+            "Количество значений не совпадает с количеством колонок."
+        )
 
     record = {}
 
@@ -57,11 +69,17 @@ def insert_record(metadata, table_name, values, records):
         column_type = columns[column_name]
 
         if column_type == "int":
-            record[column_name] = int(value)
+            try:
+                record[column_name] = int(value)
+            except ValueError as error:
+                raise ValueError(
+                    f"Некорректное значение: {value}"
+                ) from error
 
         elif column_type == "bool":
             if str(value).lower() not in ("true", "false"):
                 raise ValueError(f"Некорректное значение: {value}")
+
             record[column_name] = str(value).lower() == "true"
 
         elif column_type == "str":
@@ -71,6 +89,7 @@ def insert_record(metadata, table_name, values, records):
     record[ID_COLUMN] = next_id
 
     return record
+
 
 def select_records(metadata, table_name, records, condition=None):
     """Получить записи таблицы с учётом условия."""
@@ -88,10 +107,17 @@ def select_records(metadata, table_name, records, condition=None):
     column_type = metadata[table_name][column_name]
 
     if column_type == "int":
-        value = int(value)
+        try:
+            value = int(value)
+        except ValueError as error:
+            raise ValueError(
+                f"Некорректное значение: {value}"
+            ) from error
+
     elif column_type == "bool":
         if str(value).lower() not in ("true", "false"):
             raise ValueError(f"Некорректное значение: {value}")
+
         value = str(value).lower() == "true"
 
     operators = {
@@ -112,6 +138,7 @@ def select_records(metadata, table_name, records, condition=None):
         if operators[operator](record[column_name], value)
     ]
 
+
 def update_record(metadata, table_name, records, column_name, value, condition):
     """Изменить значения в записях таблицы."""
     if table_name not in metadata:
@@ -131,11 +158,17 @@ def update_record(metadata, table_name, records, column_name, value, condition):
         column_type = columns[column]
 
         if column_type == "int":
-            return int(raw_value)
+            try:
+                return int(raw_value)
+            except ValueError as error:
+                raise ValueError(
+                    f"Некорректное значение: {raw_value}"
+                ) from error
 
         if column_type == "bool":
             if str(raw_value).lower() not in ("true", "false"):
                 raise ValueError(f"Некорректное значение: {raw_value}")
+
             return str(raw_value).lower() == "true"
 
         return str(raw_value)
@@ -167,6 +200,7 @@ def update_record(metadata, table_name, records, column_name, value, condition):
 
     return records, updated
 
+
 def delete_records(metadata, table_name, records, condition):
     """Удалить записи по заданному условию."""
     if table_name not in metadata:
@@ -180,10 +214,17 @@ def delete_records(metadata, table_name, records, condition):
     column_type = metadata[table_name][column_name]
 
     if column_type == "int":
-        value = int(value)
+        try:
+            value = int(value)
+        except ValueError as error:
+            raise ValueError(
+                f"Некорректное значение: {value}"
+            ) from error
+
     elif column_type == "bool":
         if str(value).lower() not in ("true", "false"):
             raise ValueError(f"Некорректное значение: {value}")
+
         value = str(value).lower() == "true"
 
     operators = {
