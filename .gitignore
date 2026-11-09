@@ -1,0 +1,22 @@
+# Виртуальное окружение
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Сборка пакета
+dist/
+build/
+
+# Кэш Ruff
+.ruff_cache/
+
+# Файлы базы данных
+db_meta.json
+data/
+
+# macOS
+.DS_Store
